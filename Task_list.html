@@ -1,0 +1,403 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tocas-ui/2.3.3/tocas.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tocas-ui/2.3.3/tocas.js"></script>
+<script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js"></script>
+<script>
+var t_Time,count=0,target,I,N;
+function setCookie(cname,cvalue,exhours)
+{
+  var d = new Date();
+  d.setTime(d.getTime()+(exhours*60*60*1000));
+  var expires = "expires="+d.toGMTString();
+  document.cookie = cname + "=" + cvalue + "; " + expires;
+}
+function getCookie(cname){
+	var name = cname + "=";
+	var ca = document.cookie.split(';');
+	for(var i=0; i<ca.length; i++) {
+		var c = ca[i].trim();
+		if (c.indexOf(name)==0) { return c.substring(name.length,c.length); }
+	}
+	return "";
+}
+function get_response(S){
+	var c = S.trim();
+	var n=c.indexOf('"success":"True"');
+	if (Boolean(n)==true) { return c.substring(n+18); }
+	else{
+		return "";
+		}
+	}
+function makeRequest(E_id,status,No,H_id,star) {
+    t_Request = new XMLHttpRequest();
+    if (!t_Request) {
+      alert('Giving up :( Cannot create an XMLHTTP instance');
+      return false;
+    }
+    t_Request.onreadystatechange =function (){
+    if (t_Request.readyState == XMLHttpRequest.DONE) {
+      if (t_Request.readyState == 4 && t_Request.status == 200) {
+        var response =this.responseText;
+         console.log(response);    
+            if(No==(-1)){
+                t_Time=null;
+                $("#input").hide();
+                
+                setCookie("Task_list",get_response(response),6);
+                var x=get_response(response).split("-");
+                $("#first").empty();
+                $("#blockquote").empty();
+                for(var i=1;i<(x.length);i++){
+                    appendTitle(x[i].split(".")[0],x[i].split(".")[1]);
+                }
+                if(status=="communication"){
+                    ts('#first.tabbed.menu .item').tab({
+                    onSwitch: (tabName, groupName) => {
+                        count=0;
+                        t_Time=3000;
+
+                        communication_polling(status);
+                        $("#input").show();
+                        N=tabName;
+                        I=(-1);
+                    }
+                });}
+                else{
+
+                   ts('#first.tabbed.menu .item').tab({
+                    onSwitch: (tabName, groupName) => {
+                        makeRequest("",status,tabName,"Employer");
+                    }
+                });}
+            }
+            else if(No==(-2)){
+                t_Time=null;
+                $("#input").hide();
+                setCookie("Task_list",get_response(response),6);
+                var x=get_response(response).split("-");
+                $("#first").empty();
+                $("#blockquote").empty();
+                for(var i=1;i<(x.length);i++){
+                    appendTitle(x[i].split(".")[0],x[i].split(".")[1]);
+                }
+                if(status=="communication"){
+                    ts('#first.tabbed.menu .item').tab({
+                    onSwitch: (tabName, groupName) => {
+                        count=0;
+                        t_Time=3000;
+                        N=tabName;
+                        I=(-2);
+
+                        //window.clearTimeout(t1);
+                        $("#input").show();
+                        
+                        communication_polling(status);
+                    }
+                });
+                }
+                else{
+                    ts('#first.tabbed.menu .item').tab({
+                        onSwitch: (tabName, groupName) => {
+                            t_Time=null;
+                            makeRequest("",status,tabName,"Employee");
+                        }
+                });}
+            }
+            
+            else if(E_id=="communication"){
+                $("#input").show();
+                var x=response.split("&");
+                if(count==0){
+                    if(response.match("no_message")!=null){
+                        alert(response.match("no_message"));
+                        communication_polling(status);
+                    }
+                    else{
+                        t_Time=5000;
+                        $("#"+String(status)).empty();
+
+                        $("#"+String(status)).append("<div class=\"ts attached secondary segment\"><div class=\"ts speeches\" id=\"speeches\"><div><div>");
+                        for(var i=0;i<(x.length);i++){
+                            if(x[i].split("、")[0].substring(3)==getCookie("HMIT_Account").split("&")[0]){
+                                $("#speeches").append("<div class=\"pointing speech\"><div class=\"avatar\"><img src=\"../images/user.png\"></div><div class=\"content\">"+x[i].split("、")[1].substring(8)+"</div></div>");
+                                }
+                            else{
+                                $("#speeches").append("<div class=\"right pointing speech\"><div class=\"avatar\"><img src=\"../images/user.png\"></div><div class=\"content\">"+x[i].split("、")[1].substring(8)+"</div></div>");
+                                }
+                        }
+                        count=response.split("&")[x.length-1].split("、")[2].substring(6);
+                    }
+                }
+                else{
+                    t_Time=3000;
+                    if(response.match("offline/offconnect" )!=null){
+                        alert("offline/offconnect");
+                    }
+                    else if(response.match("no_update" )!=null ){
+                        alert(response.match("no_update"));
+                        if(!$("#speeches").html()){
+                            count=0;
+                        }
+                    }
+                    else{
+                    for(var i=0;i<x.length;i++){
+                        if(x[i].split("、")[0].substring(3)==getCookie("HMIT_Account").split("&")[0]){
+                            $("#speeches").append("<div class=\"pointing speech\"><div class=\"avatar\"><img src=\"../images/user.png\"></div><div class=\"content\">"+x[i].split("、")[1].substring(8)+"</div></div>");
+                            }
+                        else{
+                            $("#speeches").append("<div class=\"right pointing speech\"><div class=\"avatar\"><img src=\"../images/user.png\"></div><div class=\"content\">"+x[i].split("、")[1].substring(8)+"</div></div>");
+                            }
+                        }
+                    count=response.split("&")[x.length-1].split("、")[2].substring(6);
+                    }
+                    
+                }
+            }
+            
+            else{        
+                t_Time=null;
+                $("#input").hide();
+                var x=get_response(response).split("=");
+
+                $("#items"+String(No)).empty();
+                $("#card"+String(No)).remove();
+                if(status=="未完成"){
+                    for(var i=0;i<(x.length);i++){
+                        application(i, x[i].split("、")[2].substring(5), x[i].split("、")[3].substring(9), x[i].split("、")[4].substring(5),x[i].split("、")[0].substring(3), No , H_id , x[i].split("、")[1].substring(8));
+                    }
+                }
+                else if(status=="申請中"){
+                    application(0, null, null, x[0].split("、")[2].substring(5),x[0].split("、")[0].substring(3), No , H_id , x[0].split("、")[1].substring(8));
+                }
+                
+                else if(status=="進行中"){
+                    progressive(x[0].split("、")[0].substring(3),x[0].split("、")[1].substring(8),x[0].split("、")[2].substring(5),H_id,No);
+                }
+            }
+      }
+        else {
+            alert('There was a problem with the request.');
+             }
+         }
+    }
+        if(No<0){
+            t_Request.open("POST","php/R_Task.php",true);
+            t_Request.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+            if(No==(-1)){
+                t_Request.send("id="+E_id+"&status="+status+"&identity=Employer");}
+            else if(No==(-2)){
+                t_Request.send("id="+E_id+"&status="+status+"&identity=Employee");}
+        }
+        else if(E_id=="Null"){
+            t_Request.open("POST","php/Score.php",true);
+            t_Request.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+            t_Request.send("id="+H_id+"&identity=Employee"+"&No="+No+"&status="+status+"&star="+star);
+        }
+        else if(E_id==""){
+            t_Request.open("POST","php/R_Score.php",true);
+            t_Request.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+            t_Request.send("No="+No+"&status="+status+"&identity="+H_id+"&id="+getCookie("HMIT_Account").split("&")[0]+"&star=");   
+        }
+        else if(E_id=="communication"){
+            t_Request.open("POST","php/R_Communication.php",true);
+            t_Request.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+            t_Request.send("id="+getCookie('HMIT_Account').split('&')[0]+"&No="+status+"&identity="+H_id+"&count="+No);
+            }
+    }
+function appendTitle(No,title){
+	var txt1="<a class='item' data-tab='"+String(No)+"'>"+title+"</a>";
+    var txt2="<div data-tab='"+String(No)+"' class='ts bottom attached tab segment' id='"+String(No)+"'><div class='ts divided items' id='items"+String(No)+"'></div></div>"; 
+    $("#first").append(txt1);
+    $("#blockquote").append(txt2);
+}
+function application(i,star,quantity,time,id,No,identity,task_content){
+	var item="<div class='item' id='item"+String(No)+String(i)+"'></div>";
+	var content="<div class='content' id='content"+String(No)+String(i)+"'></div>";
+	var agree_actions="<div class='middle aligned actions' id='agree"+String(No)+String(i)+"'></div>";
+    var disagree_actions="<div class='middle aligned actions' id='disagree"+String(No)+String(i)+"'></div>";
+    if(identity=="Employee"){
+        var header="<a class='header'>任務內容:"+task_content+"</a>";
+        var description="<div class='description'>發佈人:"+id+"</div>";
+        var close="<button class='ts negative button' onclick=\"makeRequest('Null','disagree','"+String(No)+"','"+String(id)+"')\">放棄</button>";         
+    }
+    else if(identity=="Employer"){
+        var header="<a class='header'>評分:"+String(star)+"</a>";
+        var meta="<div class='meta'>完成任務數:"+String(quantity)+"</div>";
+        var description="<div class='description'>留言:"+String(task_content)+"</div>";
+        var positive="<div class='ts positive button' onclick=\"makeRequest('Null','agree','"+String(No)+"','"+String(id)+"')\">同意</div>";
+        var close="<button class='ts close button' onclick=\"makeRequest('Null','disagree','"+String(No)+"','"+String(id)+"')\"></button>";
+    }
+    var extra="<div class='extra'>申請時間:"+String(time)+"</div>";
+
+    $("#items"+String(No)).append(item);
+    $("#item"+String(No)+String(i)).append(content);
+    $("#item"+String(No)+String(i)).append(agree_actions);
+    $("#item"+String(No)+String(i)).append(disagree_actions); 
+    $("#content"+String(No)+String(i)).append(header);
+    $("#content"+String(No)+String(i)).append(meta);
+    $("#content"+String(No)+String(i)).append(description);
+    $("#content"+String(No)+String(i)).append(extra);
+    $("#agree"+String(No)+String(i)).append(positive);
+    $("#disagree"+String(No)+String(i)).append(close);
+}
+
+function progressive(id,task_content,time,identity,No){
+	var card="<div class='ts card' id='card"+No+"'></div>";
+	var content="<div class='content' id='content"+No+"'></div>";
+	var symbol="<div class='symbol' id='symbol"+No+"'></div>";
+    var extra_content="<div class='extra content' id='extra_content"+No+"'></div>";
+    var attached_buttons="<div class='ts fluid bottom attached buttons' id='attached_buttons"+No+"'></div>";
+    
+    if(identity=="Employer"){
+    var header="<div class='header'>任務是否完成?</div>";
+    var description="<div class='description'><p>"+task_content+"<p<</div>";
+    var done="<button class='ts opinion button' onclick=\"confirm('finish',"+No+",'"+id+"')\">確認(完成任務)</button>";
+    var wrong="<button class='ts secondary opinion button'>舉報(如:無故消失、不做等...)</button>";
+    var fail="<button class='ts opinion button'>失敗(如:預期未達標、超時、)</button>";
+    }
+    else if(identity=="Employee"){
+    var header="<div class='header'>任務進行中...</div>";
+    var description="<div class='description'><p>"+task_content+"<p<</div>"; 
+    var wrong="<button class='ts opinion button'>舉報(如:完成後不予理會、無故刁難等...)</button>";
+    var fail="<button class='ts secondary opinion button'>放棄(註:若無故放棄將造成不好的影響)</button>";
+    }
+    var extra="<div class='extra'>"+String(time)+"</div>";
+    $("#"+String(No)).append(card);
+    $("#card"+String(No)).append(content);
+    $("#card"+String(No)).append(symbol);
+    $("#card"+String(No)).append(extra_content); 
+    $("#card"+String(No)).append(attached_buttons); 
+    $("#content"+String(No)).append(header);
+    $("#content"+String(No)).append(description);
+    $("#content"+String(No)).append(extra);
+    if(identity=="Employer"){$("#attached_buttons"+String(No)).append(done);}
+    $("#attached_buttons"+String(No)).append(wrong);
+    $("#attached_buttons"+String(No)).append(fail);
+
+}
+function communication_polling(status){
+    makeRequest(status,N,count,I);
+    setTimeout(function(){communication_polling(status);},t_Time);
+    }
+function Input_message(){
+var c=document.getElementById("input_frame").value;
+
+var tRequest = new XMLHttpRequest();
+tRequest.onreadystatechange =function (){
+    if (tRequest.readyState == XMLHttpRequest.DONE) {
+      if (tRequest.readyState == 4 && tRequest.status == 200) {
+        var response =this.responseText;
+        makeRequest("communication",N,count,I);
+
+         console.log(response); }
+    }
+}
+tRequest.open("POST","php/Communication.php",true);
+tRequest.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+tRequest.send("No="+N+"&id="+getCookie("HMIT_Account").split("&")[0]+"&identity="+I+"&content="+c);
+$("#input_frame").val("");
+}
+</script>
+</head>
+<body>
+<div class="ts static visible left sidebar vertical menu">
+                <!--a class="center aligned item">提醒</a-->
+                <!--a class="item">評分</a-->
+                <!--a class="item"></a-->
+                <div class="item">
+                    僱傭方
+                    <div class="menu">
+                        <a class="bottom item" onclick="makeRequest(getCookie('HMIT_Account').split('&')[0],'未完成',-1)">申請人</a>
+                        <a class="bottom item" onclick="makeRequest(getCookie('HMIT_Account').split('&')[0],'進行中',-1)">進行中</a>
+                        <a class="bottom item" onclick="makeRequest(getCookie('HMIT_Account').split('&')[0],'communication',-1)">提問</a>
+                    </div>
+                </div>
+                <div class="item">
+                    受僱方
+                    <div class="menu">
+                        <a class="bottom item" onclick="makeRequest(getCookie('HMIT_Account').split('&')[0],'申請中',-2)">申請中</a>
+                        <a class="bottom item" onclick="makeRequest(getCookie('HMIT_Account').split('&')[0],'進行中',-2)">進行中</a>
+                        <a class="bottom item" onclick="makeRequest(getCookie('HMIT_Account').split('&')[0],'communication',-2)">提問</a>
+                    </div>
+                </div>
+                <a class="bottom item">登出</a>
+</div>
+
+<div class="squeezable pusher">
+        <div class="ts container">
+            <div class="ts grid">
+                <div class="row">
+                    <div class="one wide column"></div>
+                    <div class="fourteen wide column">
+        <h3 class="ts dividing header"><span id="header">任務列表</span></h3>
+        <div id="first" class="ts top attached tabbed menu">
+        </div>
+        <blockquote class="ts secondary quote" id="blockquote">
+    </blockquote>
+    <div class="ts action input" id="input">
+        <input type="text" placeholder="輸入訊息..." id="input_frame">
+        <button class="ts button" onclick="Input_message()">送出</button>
+    </div>
+    </div>
+<div class="one wide column"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="ts modals dimmer">
+    <dialog id="closableModal" class="ts closable tiny modal">
+        <div class="header">
+            確認完成任務
+        </div>
+        <div class="content">
+                <i class="empty star icon" id="star_1"></i>
+                <i class="empty star icon" id="star_2"></i>
+                <i class="empty star icon" id="star_3"></i>
+                <i class="empty star icon" id="star_4"></i>
+                <i class="empty star icon" id="star_5"></i>
+        </div>
+        <div class="actions">
+            <button class="ts deny button">
+                不
+            </button>
+            <button class="ts positive button" id="Yes">
+                是的
+            </button>
+        </div>
+    </dialog>
+</div>
+<script>
+number=0;
+document.getElementById("star_1").addEventListener("click",function(){number=1;add();reduce();});
+document.getElementById("star_2").addEventListener("click",function(){number=2;add();reduce();});
+document.getElementById("star_3").addEventListener("click",function(){number=3;add();reduce()});
+document.getElementById("star_4").addEventListener("click",function(){number=4;add();reduce()});
+document.getElementById("star_5").addEventListener("click",function(){number=5;add();reduce()});
+function add() {
+    for(var i=1;i<=number;i++){
+    document.getElementById("star_"+String(i)).setAttribute("class","star icon");
+}
+    }
+function reduce() {
+    for(var i=5;i>number;i--){
+    document.getElementById("star_"+String(i)).setAttribute("class","empty star icon");
+    }
+}
+function confirm(status,No,id){
+    ts('#closableModal').modal("show");
+    document.getElementById("Yes").addEventListener("click",function(){makeRequest('Null',status,No,id,number);});
+}
+
+
+$(document).ready(function(){
+    $("#input").hide();
+});
+
+
+</script>
+</body>
+</html>

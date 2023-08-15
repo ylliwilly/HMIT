@@ -1,0 +1,101 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tocas-ui/2.3.3/tocas.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tocas-ui/2.3.3/tocas.js"></script>
+<script>
+function setCookie(cname,cvalue,exhours)
+{
+  var d = new Date();
+  d.setTime(d.getTime()+(exhours*60*60*1000));
+  var expires = "expires="+d.toGMTString();
+  document.cookie = cname + "=" + cvalue + "; " + expires;
+}
+      function makeRequest() {
+
+        t_Request = new XMLHttpRequest();
+        if (!t_Request) {
+          alert('Giving up :( Cannot create an XMLHTTP instance');
+          return false;
+        }
+        t_Request.onreadystatechange =function (){
+    
+        if (t_Request.readyState == XMLHttpRequest.DONE) {
+          if (t_Request.readyState == 4 && t_Request.status == 200) {
+            var response =this.responseText;
+             console.log(response);
+             
+              if(response.search('"success":"False"')!=-1){
+                  alert("登入失敗!");
+                  if(response.search('查無此號')!=-1){
+                    alert("查無此號!");
+                    return false;
+                  }
+                  else{
+                    alert("輸入不完整!");
+                    return false;
+                  }
+              }
+              else if(response.search('"success":"True"')!=-1){
+              setCookie("HMIT_Account",document.getElementsByName('id')[0].value+"&"+document.getElementsByName('password')[0].value+"&"+response.substring(19),6)
+              alert("登入成功!");
+              window.location.assign('Task_list.html');
+              }
+                else{
+                alert("Error!!!");
+                return false;
+                }
+          }
+            else {
+                alert('There was a problem with the request.');
+                 }
+             }
+        }  
+          t_Request.open("POST","php/Sign_in.php",true);
+          t_Request.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+            var id=String(document.getElementsByName('id')[0].value);
+            var password=String(document.getElementsByName('password')[0].value);
+          t_Request.send("id="+id+"&password="+password);
+          
+            }
+</script>
+</head>
+
+<body>
+    <div class="ts three column centered grid">
+        <div class="column">
+
+            <div class="ts heading slate">
+                <div class="ts three column centered grid">
+                <div class="column">
+                    <span class="header">登入</span>
+                </div>
+                </div>
+
+                <span class="description">
+                    <table>
+                        <tr>
+                        <div class="ts input">學號:<input type="text" name="id"></div>
+                        </tr>
+                        <br><br>
+                        <tr>
+                        <div class="ts input">密碼:<input type="password" name="password"></div>
+                        </tr>
+                        <br><br>
+                        <tr>
+                        <td>
+                        <button class="ts button"  id="submit">送出</button>
+                        </td>
+                      </tablle>
+                </span>
+
+            </div>
+        </div>
+    </div>
+<script>
+x=document.getElementById("submit");
+x.addEventListener("click",makeRequest);
+  </script>
+
+</body>
+</html>

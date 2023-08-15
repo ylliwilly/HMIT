@@ -1,0 +1,114 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tocas-ui/2.3.3/tocas.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tocas-ui/2.3.3/tocas.js"></script>
+<script>
+function setCookie(cname,cvalue,exhours)
+{
+  var d = new Date();
+  d.setTime(d.getTime()+(exhours*60*60*1000));
+  var expires = "expires="+d.toGMTString();
+  document.cookie = cname + "=" + cvalue + "; " + expires;
+}
+function check() {
+          var nickname=String(document.getElementsByName('nickname')[0].value);
+          var id=String(document.getElementsByName('id')[0].value);
+          var password=String(document.getElementsByName('password')[0].value);
+          var email=String(document.getElementsByName('email')[0].value);
+          if(nickname=="" || nickname==null){alert("暱稱不可為空值!!!");}
+          else if(id == "" || id == null){alert("帳號不可為空值!!!");}
+          else if(password=="" || password==null){alert("密碼不可為空值!!!");}
+          else if(email=="" || email==null){alert("信箱不可為空值!!!");}
+          else{
+          makeRequest(nickname,id,password,email);}
+
+}
+      function makeRequest(nickname,id,password,email) {
+        t_Request = new XMLHttpRequest();
+        if (!t_Request) {
+          alert('Giving up :( Cannot create an XMLHTTP instance');
+          return false;
+        }
+        t_Request.onreadystatechange =function (){
+
+       if (t_Request.readyState == XMLHttpRequest.DONE) {
+          if (t_Request.readyState == 4 && t_Request.status == 200) {
+            var response =this.responseText;
+             console.log(response);
+             
+              if(response.search('"success":"False"')!=-1){
+                  alert("註冊失敗請檢察輸入是否正確!");
+                  return false;
+              }
+              else if(response.search('"success":"True"')!=-1){
+              alert("註冊成功!");
+              setCookie("HMIT_Account",id+"&"+password+"&"+nickname,6);
+              window.location.assign('index.html');
+              }
+                else{
+                alert("Error!!!");
+                return false;
+                }
+          }
+            else {
+                alert('There was a problem with the request.');
+                 }
+             }
+            }
+          t_Request.open("POST","php/Register.php",true);
+          t_Request.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+          t_Request.send("id="+id+"&nickname="+nickname+"&password="+password+"&email="+email);
+          alert("已執行");
+            }
+</script>
+</head>
+
+<body>
+
+    <div class="ts three column centered grid">
+        <div class="column">
+
+            <div class="ts heading slate">
+                <div class="ts three column centered grid">
+                <div class="column">
+                    <span class="header">註冊會員</span>
+                </div>
+                </div>
+
+                <span class="description">
+                    <table>
+                        <tr>
+                        <div class="ts input">暱稱:<input type="text" name="nickname"></div>
+                        </tr>
+                        <br><br>
+                        <tr>
+                        <div class="ts input">帳號(僅可輸入8位數!):<input type="text" name="id"></div>
+                        </tr>
+                        <br><br>
+                        <tr>
+                        <div class="ts input">密碼:<input type="password" name="password"></div>
+                        </tr>
+                        <br><br>
+                        <tr>
+                        <tr>
+                        <div class="ts input">信箱:<input type="text" name="email"></div>
+                        </tr>
+                        <br><br>
+                        <td>
+                        <button class="ts button"  id="submit">送出</button>
+                        </td>
+                      </tablle>
+                </span>
+
+            </div>
+        </div>
+    </div>
+    
+<script>
+x=document.getElementById("submit");
+x.addEventListener("click",check);
+  </script>
+
+</body>
+</html>

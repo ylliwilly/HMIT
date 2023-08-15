@@ -1,0 +1,88 @@
+﻿<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tocas-ui/2.3.3/tocas.css">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/tocas-ui/2.3.3/tocas.js"></script>
+	<script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js"></script>
+<script>
+function getCookie(cname){
+	var name = cname + "=";
+	var ca = document.cookie.split(';');
+	for(var i=0; i<ca.length; i++) {
+		var c = ca[i].trim();
+		if (c.indexOf(name)==0) { return c.substring(name.length,c.length); }
+	}
+	return "";
+}
+function getname(S){
+				var c = S.trim();
+				var n=c.indexOf('"success":"True"');
+				if (Boolean(n)==true) { return c.substring(n+18); }
+				else{
+			return "";
+				}
+		}
+function makeMenu() {
+        t_Request = new XMLHttpRequest();
+        if (!t_Request) {
+          alert('Giving up :( Cannot create an XMLHTTP instance');
+          return false;
+        }
+        t_Request.onreadystatechange =function (){
+    
+       if (t_Request.readyState == XMLHttpRequest.DONE) {
+          if (t_Request.readyState == 4 && t_Request.status == 200) {
+            var response =this.responseText;
+             console.log(response);       
+               if(response.search('"success":"True"')!=-1){
+                document.getElementById("name").innerHTML=getname(response);
+				document.getElementById("menu").setAttribute("class","ts four item menu");
+				document.getElementById("Sign").setAttribute("style","display:none");
+				document.getElementById("Task").setAttribute("style","display:block");
+				document.getElementById("Release").setAttribute("style","display:block");
+              }
+                else{
+				document.getElementById("menu").setAttribute("class","ts three item menu");
+				document.getElementById("Sign").setAttribute("style","display:block");
+				document.getElementById("Task").setAttribute("style","display:none");
+				document.getElementById("Release").setAttribute("style","display:none");
+                alert("您尚未登入!!!");
+                return false;
+                }
+          }
+            else {
+                alert('There was a problem with the request.');
+                 }
+             }
+            }
+          t_Request.open("POST","php/Sign_in.php",true);
+          t_Request.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+          var id=getCookie("HMIT_Account").split("&")[0];
+          t_Request.send("id="+id);
+            }
+	</script>
+</head>
+<body>
+		<div class="ts five item menu" id="menu">
+				<a class="center aligned item"  target="main" id="User">
+				<i class="user circle outline icon"></i><span id="name">訪客</span></a>
+			
+				<a class="center aligned item" href="Task_list.html"  target="main" id="Task">
+				<i class="alarm icon"></i>任務</a>
+				
+				<a class="center aligned item" href="Task_release.html"  target="main" id="Release">
+				<i class="edit icon"></i>發布任務</a>
+				
+				<a class="center aligned item" href="Task.html"  target="main">
+				<i class="home icon"></i>首頁</a>
+				
+				<a class="center aligned item" href="Sign_in.html"  target="main" id="Sign">
+				<i class="sign in icon"></i>登入</a>
+		</div>
+	<script>
+		    ts('.ts.dropdown:not(.basic)').dropdown();
+    jQuery(document).ready(function() {makeMenu();});
+		
+	</script>
+</body>
+</html>

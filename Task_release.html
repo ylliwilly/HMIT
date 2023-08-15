@@ -1,0 +1,138 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tocas-ui/2.3.3/tocas.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tocas-ui/2.3.3/tocas.js"></script>
+<style>
+div.center {
+position: absolute;
+top: 50%;
+left: 50%;
+}
+</style>
+<script>
+function getCookie(cname){
+	var name = cname + "=";
+	var ca = document.cookie.split(';');
+	for(var i=0; i<ca.length; i++) {
+		var c = ca[i].trim();
+		if (c.indexOf(name)==0) { return c.substring(name.length,c.length); }
+	}
+	return "";
+}
+function ChangeList(id){
+    if(document.getElementById(id).selectedIndex == 1){
+        document.getElementById("F_e").setAttribute("style","display:block");
+        document.getElementById("F_l").setAttribute("style","display:block");
+    }
+    else if(document.getElementById(id).selectedIndex == 2){
+        document.getElementById("F_l").setAttribute("style","display:none");
+        document.getElementById("F_e").setAttribute("style","display:block");
+    }
+    else{
+        document.getElementById("F_e").setAttribute("style","display:none");
+        document.getElementById("F_l").setAttribute("style","display:none");
+    }
+}
+function validateForm(){
+    document.getElementsByName("id")[0].setAttribute("value",getCookie("HMIT_Account").split("&")[0]);
+    var x=0;
+        if(document.forms["Form"]["title"].value=="" || document.forms["Form"]["title"].value==null){
+            document.getElementById("title").setAttribute("class","ts warning input");
+            x=1;
+        }
+        if(document.forms["Form"]["content"].value==""|| document.forms["Form"]["content"].value==null){
+            document.getElementById("content").setAttribute("class","ts warning input");
+            x=1;
+        }
+        if(document.forms["Form"]["pay"].value=="" || document.forms["Form"]["content"].value==null){
+            document.getElementById("pay").setAttribute("class","ts warning input");
+            x=1;
+        }
+        if(x==1){
+        return false;
+        }
+}
+</script>
+</head>
+<body>
+<div class="ts grid">
+    <div class="row">
+        <div class="four wide column"></div>
+        <div class="eight wide column">
+                <div class="ts heading slate">
+                        <form class="ts form" action="php/Task.php"  name="Form" onsubmit="return validateForm()" method="post"  target="id_iframe">
+                            <div class="ts dividing header">任務資訊</div>
+                            <div class="field">
+                                <label>標題</label>
+                                <div id="title">
+                                <input type="text" name="title">
+                                </div>
+                            </div>
+                            <div class="field">
+                                <label>內容</label>
+                                <div id="content">
+                                <input type="text" name="content">
+                                </div>
+                            </div>
+                            <div class="field">
+                                <label>任務類型</label>
+                                    <select id="S1" onChange="ChangeList(this.id);" name="type">
+                                        <option value="normal">普通</option>
+                                        <!--option value="limited_time">限時</option-->
+                                        <!--option value="emergency">緊急</option-->
+                                        <!--option value="repeat">重複</option-->
+                                    </select>
+                            </div>
+                            <div class="field" id="F_l" style="display:none">
+                                <label>日期</label>
+                                <div class="three fields">
+                                    <div class="field">
+                                        <div id="month">
+                                        <input type="text" placeholder="月" name="month">
+                                        </div>
+                                    </div>
+                                    <div class="field">
+                                        <div id="day">
+                                        <input type="text" placeholder="日" name="day">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="field" id="F_e" style="display:none">
+                                <label>時間</label>
+                                <div class="three fields">
+                                    <div class="field">
+                                        <div id="hour">
+                                        <input type="text" placeholder="小時" name="hour">
+                                        </div>
+                                    </div>
+                                    <div class="field">
+                                        <div id="minute">
+                                        <input type="text" placeholder="分鐘" name="minute">
+                                        </div>
+                                    </div>
+                                    <div class="field">
+                                        <div id="second">
+                                        <input type="text" placeholder="秒" name="second">
+                                        </div>
+                                    </div> 
+                                </div>
+                            </div>
+                            <div class="field">
+                                    <label>酬勞</label>
+                                    <div id="pay">
+                                    <input type="text" placeholder="NT$" name="pay">
+                                    </div>
+                                </div>
+                            <input name="id" style="display:none">
+                            <button class="ts button">發布</button>
+                        </form>
+                </div>
+        </div>
+        <div class="four wide column"></div>
+    </div>
+</div>
+<iframe id="id_iframe" name="id_iframe" ></iframe>
+</body>
+</html>

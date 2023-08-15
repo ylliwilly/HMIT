@@ -1,0 +1,547 @@
+<html>
+<head>
+<meta charset="UTF-8">    
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tocas-ui/2.3.3/tocas.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tocas-ui/2.3.3/tocas.js"></script>
+<script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js"></script>
+<style>
+    body{		
+		background-repeat:no-repeat;
+		background-attachment:local;
+		background-position: center;
+		background-size:cover;
+	}
+    #Main {
+    padding-bottom: 10px;
+    }
+    #Footer {
+    height:10px;
+    position: relative;
+    margin-top: -10px;
+    }
+  div.center {text-align: center;}
+</style>
+<script>
+
+var Now_page=1;
+function setCookie(cname,cvalue,exhours)
+{
+  var d = new Date();
+  d.setTime(d.getTime()+(exhours*60*60*1000));
+  var expires = "expires="+d.toGMTString();
+  document.cookie = cname + "=" + cvalue + "; " + expires;
+}
+function getCookie(cname){
+	var name = cname + "=";
+	var ca = document.cookie.split(';');
+	for(var i=0; i<ca.length; i++) {
+		var c = ca[i].trim();
+		if (c.indexOf(name)==0) { return c.substring(name.length,c.length); }
+	}
+	return "";
+}
+function get_response(S){
+				var c = S.trim();
+				var n=c.indexOf('"success":"True"');
+				if (Boolean(n)==true) { return c.substring(n+18); }
+				else{
+			return "";
+				}
+		}
+function Task_List(status) {
+    t_Request = new XMLHttpRequest();
+    if (!t_Request) {
+      alert('Giving up :( Cannot create an XMLHTTP instance');
+      return false;
+    }
+    t_Request.onreadystatechange =function (){
+
+    if (t_Request.readyState == XMLHttpRequest.DONE) {
+      if (t_Request.readyState == 4 && t_Request.status == 200) {
+        var response =this.responseText;
+        console.log(response);
+          setCookie("Max_number",get_response(response),6);
+          display(0);
+      }
+    }
+    else {
+        return ('There was a problem with the request.');
+            }
+    }
+    t_Request.open("POST","php/R_Task.php",true);
+    t_Request.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+    t_Request.send("status="+status+"&id="+getCookie("HMIT_Account").split("&")[0]);
+           
+}
+function Search_Task_List(status,start,end) {
+    t_Request = new XMLHttpRequest();
+    if (!t_Request) {
+      alert('Giving up :( Cannot create an XMLHTTP instance');
+      return false;
+    }
+    t_Request.onreadystatechange =function (){
+
+        if (t_Request.readyState == XMLHttpRequest.DONE) {
+            if (t_Request.readyState == 4 && t_Request.status == 200) {
+                var response =this.responseText;
+                console.log(response);
+                setCookie("Response",get_response(response),6);
+                var n=String(get_response(response)).split("、");
+                
+                for(var i=0;i<n.length;i++){
+                var x=String(get_response(response)).split("、")[i];
+
+                document.getElementById("U"+String(i)).innerHTML=(x.split("-"))[0].substring(3);
+                document.getElementById("H"+String(i)).innerHTML=(x.split("-"))[1].substring(6);
+                document.getElementById("C"+String(i)).innerHTML=(x.split("-"))[2].substring(8);
+                document.getElementById("P"+String(i)).innerHTML=(x.split("-"))[3].substring(4);
+                
+                if(x.split("-")[5]=="done"){
+                    document.getElementById("toggle"+String(i)).setAttribute("class","toggle on icon");
+                    document.getElementById("take"+String(i)).setAttribute("onclick","");
+                    } 
+                }
+            }
+            else {
+                return ('There was a problem with the request.');
+            }
+        }
+    }
+    t_Request.open("POST","php/R_Task.php",true);
+    t_Request.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+    t_Request.send("id="+getCookie("HMIT_Account").split("&")[0]+"&status="+status+"&range_start="+start+"&range_end="+end); 
+
+    
+}
+function makeRequest(status,start,end,No,id,th) {
+    t_Request = new XMLHttpRequest();
+    if (!t_Request) {
+      alert('Giving up :( Cannot create an XMLHTTP instance');
+      return false;
+    }
+    t_Request.onreadystatechange =function (){
+
+    if (t_Request.readyState == XMLHttpRequest.DONE) {
+      if (t_Request.readyState == 4 && t_Request.status == 200) {
+        var response =this.responseText;
+
+        console.log(response);
+
+        if(start==(-1) && end==(-1)){   
+            if(response.search('{"success":"False"}:申請失敗')!=-1){
+                  alert("申請失敗!");
+                  return false;
+              }
+            else if(response.search('{"success":"True"}:申請成功')!=-1){
+              document.getElementById("toggle"+String(th)).setAttribute("class","toggle on icon");
+            }
+            else{alert("請先登入!");}
+        }
+        else if(status==2){
+
+            if(end==(-2)){
+                open_message(th);
+            }
+            else if(end==(-3)){
+                var i=1,l=1;
+                var x=get_response(response).split('&')[0].split('-');
+                if(x.length!=1){
+                    $("#comments_"+String(th)).empty();
+                    while(x.length>(i)){
+                        var comment='<div class="ts threaded comments"><div class="comment"><a class="avatar"><img src="user.png"></a><div class="content"><a class="author">'+x[i].split(".")[0]+'</a><div class="text">'+x[i].split(".")[1]+'</div><div class="actions"><a onclick="response_message('+x[i].split(".")[2]+')">回覆</a><a>移除</a></div><div class="comments" id=comment_'+x[i].split(".")[2]+'></div></div></div>';
+                        $("#comments_"+String(th)).append(comment);
+                        i++;
+                }
+                    var y=get_response(response).split('&')[1].split('-');
+                    while(y.length>(l)){
+                        var response='<div class="comment"><div class="avatar"><img src="user.png"></div><div class="content"><a class="author">'+y[l].split(".")[0]+'</a><div class="text">'+y[l].split(".")[1]+'</div></div></div>';
+                        $("#comment_"+String(y[l].split(".")[2])).append(response);
+                        l++;
+                        }
+                    }
+            }
+        }
+      
+      }
+    }
+        else {
+            return ('There was a problem with the request.');
+             }
+    }
+    if(start==(-1) && end==(-1)){
+      t_Request.open("POST","php/Apply_Task.php",true);
+      t_Request.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+      t_Request.send("id="+id+"&No="+No);
+      }
+    else if(status==2){
+        if(end==(-2) || end==(-4)){
+            t_Request.open("POST","php/Message.php",true);
+            t_Request.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+            if(end==(-4)){
+                t_Request.send("id="+id+"&No="+No+"&content="+start+"&object="+th+"&nature=response");
+            }
+            else{
+                t_Request.send("id="+id+"&No="+No+"&content="+start+"&nature=comment");
+            }
+        }
+        else if(end==(-3)){
+            t_Request.open("POST","php/R_Message.php",true);
+            t_Request.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+            t_Request.send("id="+id+"&No="+No+"&content="+start+"&nature=comment");
+        }
+            
+      }
+    else{
+        t_Request.open("POST","php/R_Task.php",true);
+        t_Request.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+        t_Request.send("id="+getCookie("HMIT_Account")+"&status="+status+"&range_start="+start+"&range_end="+end);    
+    }
+}
+function display(plus){
+
+
+    Now_page=(Now_page+plus);
+var Max_page=Math.ceil(getCookie("Max_number")/5);
+    document.getElementById("First_page").setAttribute("style","display:none");
+    document.getElementById("Last_point").setAttribute("style","display:none");
+    document.getElementById("Next_page").setAttribute("style","display:none");
+    document.getElementById("Next_point").setAttribute("style","display:none");
+
+    for (var x=0;x<5;x++){ 
+    document.getElementById("T"+String(x)).setAttribute("style","");
+    }    
+
+    for (var x=0;x<3;x++){ 
+    document.getElementById("B"+String(x)).setAttribute("style","");
+    } 
+
+    if(Now_page==Max_page ){
+        if(getCookie("Max_number")%5!=0){
+        Search_Task_List("未完成",(1+(Now_page-1)*5),(1+(Now_page-1)*5+(getCookie("Max_number")%5)));
+        for(var l=4;l>=0;l--){
+                if((getCookie("Max_number")%5)<(l+1)){
+                    document.getElementById("T"+String(l)).setAttribute("style","display:none");
+                }
+            }
+        }
+        else{ 
+            Search_Task_List("未完成",(1+(Now_page-1)*5),(Now_page*5));
+            
+        }
+    }
+    else if(Max_page==0){
+        $("#column_mid").append("目前暫無任務，趕快去發佈任務吧");
+        document.getElementById("T0").setAttribute("style","display:none");
+        document.getElementById("T1").setAttribute("style","display:none");
+        document.getElementById("T2").setAttribute("style","display:none");
+        document.getElementById("T3").setAttribute("style","display:none");
+        document.getElementById("T4").setAttribute("style","display:none");
+    }
+    else{
+        alert("DISPLAY-->Search_Task_list");;
+        Search_Task_List("未完成",(1+(Now_page-1)*5),(5+((Now_page-1)*5)));
+    }
+
+    document.getElementById("B1").setAttribute("class","ts active button");
+    if(Max_page>=3){
+        if(Now_page ==1){
+            document.getElementById("B0").setAttribute("style","display:None");
+            document.getElementById("Next_point").setAttribute("style","");
+            document.getElementById("Next_page").setAttribute("style","");
+            document.getElementById("End_page").setAttribute("style","");
+        }
+        else if(Now_page == Max_page){
+            document.getElementById("B2").setAttribute("style","display:None");
+            document.getElementById("last_point").setAttribute("style","");
+            document.getElementById("Last_page").setAttribute("style","");
+        }
+        else if(Now_page == (Max_page-1)){
+            document.getElementById("Last_page").setAttribute("style","");
+        }
+        else{
+            document.getElementById("last_point").setAttribute("style","");
+            document.getElementById("Next_point").setAttribute("style","");
+
+            document.getElementById("Last_page").setAttribute("style","");
+            document.getElementById("Next_page").setAttribute("style","");
+
+            document.getElementById("End_page").setAttribute("style","");
+        }
+    }
+
+    else if(Max_page==2){
+        if(Now_page ==1){
+            document.getElementById("B0").setAttribute("style","display:None");
+        }
+        else{
+            document.getElementById("B2").setAttribute("style","display:None");
+        }
+
+    }
+
+    else{
+        document.getElementById("B0").setAttribute("style","display:None");
+        document.getElementById("B2").setAttribute("style","display:None");
+    }
+    
+    document.getElementById("A0").innerHTML=(Now_page-1);
+    document.getElementById("A1").innerHTML=(Now_page);
+    document.getElementById("A2").innerHTML=(Now_page+1);
+   
+}
+
+function take_task(th){
+    var x=String(getCookie("Response")).split("、")[(th)];
+    document.getElementById("id").innerHTML=x.split("-")[0].substring(3);
+    document.getElementById("title").innerHTML=x.split("-")[1].substring(6);
+    document.getElementById("content").innerHTML=x.split("-")[2].substring(8);
+    ts('#closableModal').modal("show");
+    No=th;
+    }
+</script>
+
+</head>
+
+<body>
+<div id="Main" >
+    <div class="ts three column grid">
+        <div class="column"></div>
+        <div class="column" id="column_mid">
+            <div class="ts card" id="T0">
+                <div class="content">
+                    <div class="actions">
+                        <div class="ts separated secondary icon buttons">
+                            <button class="ts circular large icon button" id ="take0" onclick="take_task(0)">
+                                <i class="toggle off icon" id="toggle0"></i>
+                            </button>
+                            <div class="ts floating dropdown button" >
+                                <i class="vertical ellipsis icon"></i>
+                                <div class="menu">
+                                    <div class="item" onclick="Report(0)">
+                                        <i class="ban icon"></i> 檢舉
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="header"><span id="H0"></span></div>
+                    <div class="middoted meta">
+                        <div>發布者：<span id="U0"></span></div>
+                    </div>
+                    <div class="description">
+                        <p><span id="C0"></span></p>
+                        <p>pay：<span id="P0"></span>$</p>
+                    </div>
+                </div>
+        </div>
+        <div class="ts card" id="T1">
+            <div class="content">
+                <div class="actions">
+                    <div class="ts separated secondary icon buttons">
+                        <button class="ts circular large icon button" id ="take1" onclick="take_task(1)">
+                            <i class="toggle off icon" id="toggle1"></i>
+                        </button>
+                        <div class="ts floating dropdown button" >
+                            <i class="vertical ellipsis icon"></i>
+                            <div class="menu">
+                                <div class="item" onclick="Report(1)">
+                                    <i class="ban icon"></i> 檢舉
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="header"><span id="H1"></span></div>
+                <div class="middoted meta">
+                    <div>發布者：<span id="U1"></span></div>
+                </div>
+                <div class="description">
+                    <p><span id="C1"></span></p>
+                    <p>pay：<span id="P1"></span>$</p>
+                </div>
+                
+            </div>
+    </div>
+    <div class="ts card" id="T2">
+        <div class="content">
+            <div class="actions">
+                <div class="ts separated secondary icon buttons">
+                    <button class="ts circular large icon button" id ="take2" onclick="take_task(2)">
+                        <i class="toggle off icon" id="toggle2"></i>
+                    </button>
+                    <div class="ts floating dropdown button" >
+                        <i class="vertical ellipsis icon"></i>
+                        <div class="menu">
+                            <div class="item" onclick="Report(2)">
+                                <i class="ban icon"></i> 檢舉
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="header"><span id="H2"></span></div>
+            <div class="middoted meta">
+                <div>發布者：<span id="U2"></span></div>
+            </div>
+            <div class="description">
+                <p><span id="C2"></span></p>
+                <p>pay：<span id="P2"></span>$</p>
+            </div>
+        </div>
+</div>
+<div class="ts card" id="T3">
+    <div class="content">
+        <div class="actions">
+            <div class="ts separated secondary icon buttons">
+                <button class="ts circular large icon button" id ="take3" onclick="take_task(3)">
+                    <i class="toggle off icon" id="toggle3"></i>
+                </button>
+                <div class="ts floating dropdown button" >
+                    <i class="vertical ellipsis icon"></i>
+                    <div class="menu">
+                        <div class="item" onclick="Report(3)">
+                            <i class="ban icon"></i> 檢舉
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="header"><span id="H3"></span></div>
+        <div class="middoted meta">
+            <div>發布者：<span id="U3"></span></div>
+        </div>
+        <div class="description">
+            <p><span id="C3"></span></p>
+            <p>pay：<span id="P3"></span>$</p>
+        </div>
+    </div>
+</div>
+<div class="ts card" id="T4">
+                <div class="content">
+                    <div class="actions">
+                        <div class="ts separated secondary icon buttons">
+                            <button class="ts circular large icon button" id ="take4" onclick="take_task(4)">
+                                <i class="toggle off icon" id="toggle4"></i>
+                            </button>
+                            <div class="ts floating dropdown button" >
+                                <i class="vertical ellipsis icon"></i>
+                                <div class="menu">
+                                    <div class="item" onclick="Report(4)">
+                                        <i class="ban icon"></i> 檢舉
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="header"><span id="H4"></span></div>
+                    <div class="middoted meta">
+                        <div>發布者：<span id="U4"></span></div>
+                    </div>
+                    <div class="description">
+                        <p><span id="C4"></span></p>
+                        <p>pay：<span id="P4"></span>$</p>
+                    </div>
+                </div>
+        </div>
+        </div>
+        <div class="column"></div>    
+    </div>
+</div>
+<div class="ts modals dimmer">
+    <dialog id="modal" class="ts modal" open>
+        <div class="header">
+            <p>回覆:<span id="topic"></span></p>
+        </div>
+        <div class="content">
+                <div class="ts resizable input">
+                    <textarea placeholder="由此輸入回覆內容..." id="textarea"></textarea>
+                </div>
+        </div>
+        <div class="actions">
+            <div class="ts fluid separated stackable buttons">
+                <button class="ts deny button" id="Send">
+                    送出
+                </button>
+                <button class="ts positive button">
+                    取消
+                </button>
+            </div>
+        </div>
+    </dialog>
+</div>
+<div class="ts modals dimmer">
+    <dialog id="closableModal" class="ts basic closable modal">
+        <i class="close icon"></i>
+        <div class="ts icon header">
+            <i class="smile icon"></i> 
+            發布者:<span id="id"></span></br>
+            確認接取該任務:<span id="title"></span>?
+        </div>
+        <div class="content">
+        提示:確認後若未完成將造成不好的評價</br>
+            <p>內容:<span id="content"></span></p> 
+        </div>
+        <div class="actions">
+            <button class="ts inverted basic deny button">
+                不
+            </button>
+            <button class="ts inverted basic positive button" id="Yes">
+                是的
+            </button>
+        </div>
+    </dialog>
+</div>
+<div id="Footer" class="center">
+  <div class="ts buttons">
+  <button class="ts button" id="the_last_page" onclick="makeRequest('未完成',1,5)">&laquo;</button>
+  <button class="ts button" style="display:none" id="Last_page"><</button>
+  <button class="ts button" id="First_page" onclick="makeRequest('未完成',1,5)">1</button>
+  <button class="ts disabled button" style="display:none" id="Last_point" onclick="display(-1)">...</button>
+
+  <button class="ts  button" id="B0" onclick="display(-1)"><span id="A0"></span></button>
+  <button class="ts  button" id="B1" onclick="display(0)"><span id="A1"></span></button>
+  <button class="ts  button" id="B2" onclick="display(1)"><span id="A2"></span></button>
+  
+  <button class="ts disabled button" style="display:none" id="Next_point">...</button>
+  <button class="ts  button" style="display:none" id="End_page" onclick="makeRequest('未完成',(Max_page-4),Max_page)"><span id="the_last_page_page"></span></button>
+  <button class="ts  button" style="display:none" id="Next_page" onclick="display(1)">></button>
+  <button class="ts  button" id="the_Next_page" onclick="makeRequest('未完成',(Max_page-4),Max_page)">&raquo;</button>
+  </div>
+</div>
+<script>
+    ts('.ts.dropdown:not(.basic)').dropdown();
+    jQuery(document).ready(function() {Task_List("未完成");});
+
+    function leave_message(th){
+        var x=String(getCookie("Response")).split("、")[(th)];
+        makeRequest(2,document.getElementById("input_"+th).value,-2,x.split("-")[4].substring(3),(getCookie("HMIT_Account").split("&"))[0],th);
+    }
+    function open_message(th){
+        var x=String(getCookie("Response")).split("、")[(th)];
+        makeRequest(2,0,-3,x.split("-")[4].substring(3),(getCookie("HMIT_Account").split("&"))[0],th);
+        No=th;
+    }
+    function report(th){
+        alert("點擊:"+th+"次");  
+    }
+    function response_message(th){
+        ts('#modal').modal("show");
+        M_No=th;
+    }
+    $("#Send").click(function(){
+        makeRequest(2,document.getElementById("textarea").value,-4,M_No,(getCookie("HMIT_Account").split("&"))[0]);
+        open_message(No);
+    });
+    document.getElementById("Yes").addEventListener("click",function(){
+        alert("here"+getCookie("Response").split("、")[(No)].split("-")[4].substring(2));
+        var x=String(getCookie("Response")).split("、")[(No)];
+        makeRequest(1,-1,-1,x.split("-")[4].substring(2),getCookie("HMIT_Account").split("&")[0],No);
+        
+});
+</script>
+</body>
+
+
+</html>
